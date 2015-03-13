@@ -4,6 +4,7 @@ from django.template import Variable, Library, Node, TemplateSyntaxError
 from django.template.loader import render_to_string
 
 from actstream.models import Follow, Action
+import unicodedata
 
 
 register = Library()
@@ -86,8 +87,11 @@ class DisplayAction(AsNode):
 
     def render_result(self, context):
         action_instance = self.args[0].resolve(context)
+        verb = action_instance.verb.replace(' ', '_')
+        s = ''.join((c for c in unicodedata.normalize('NFD',unicode(verb)) if unicodedata.category(c) != 'Mn'))
         templates = [
-            'actstream/%s/action.html' % action_instance.verb.replace(' ', '_'),
+            'actstream/%s/action.html' % s.decode(),
+        #'actstream/%s/action.html' % action_instance.verb.replace(' ', '_'),
             'actstream/action.html',
         ]
         return render_to_string(templates, {'action': action_instance},
